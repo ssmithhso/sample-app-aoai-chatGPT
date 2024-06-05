@@ -33,6 +33,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    border-radius: 8px;
 }
 
 .chatEmptyStateTitle {
@@ -62,7 +63,7 @@
 
 .chatIcon {
     height: 62px;
-    width: 62px;
+    
 }
 
 .chatMessageStream {

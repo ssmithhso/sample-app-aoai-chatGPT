@@ -7,7 +7,9 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from "rehype-raw"; 
 
 import styles from "./Chat.module.css";
+import Bail from "../../assets/BailSearch.svg"
 import Azure from "../../assets/Azure.svg";
+import Emma from "../../assets/metLogo.png"
 
 import {
     ChatMessage,
@@ -169,12 +171,12 @@ const Chat = () => {
                         {!lastQuestionRef.current ? (
                             <Stack className={styles.chatEmptyState}>
                                 <img
-                                    src={Azure}
+                                    src={Bail}
                                     className={styles.chatIcon}
                                     aria-hidden="true"
                                 />
-                                <h1 className={styles.chatEmptyStateTitle}>Start chatting</h1>
-                                <h2 className={styles.chatEmptyStateSubtitle}>This chatbot is configured to answer your questions</h2>
+                                <h1 className={styles.chatEmptyStateTitle}>Bail Guide</h1>
+                                <h2 className={styles.chatEmptyStateSubtitle}>I'm here to answer your questions about bail laws and regulations. I have access to key legislation and information provided by the CPS to help you</h2>
                             </Stack>
                         ) : (
                             <div className={styles.chatMessageStream} style={{ marginBottom: isLoading ? "40px" : "0px"}} role="log">

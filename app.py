@@ -26,7 +26,7 @@ def assets(path):
 
 # ACS Integration Settings
 AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
-AZURE_SEARCH_INDEX = os.environ.get("AZURE_SEARCH_INDEX")
+AZURE_SEARCH_INDEX = "police-bail-poc"
 AZURE_SEARCH_KEY = os.environ.get("AZURE_SEARCH_KEY")
 AZURE_SEARCH_USE_SEMANTIC_SEARCH = os.environ.get("AZURE_SEARCH_USE_SEMANTIC_SEARCH", "false")
 AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG = os.environ.get("AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG", "default")
@@ -45,7 +45,7 @@ AZURE_OPENAI_TEMPERATURE = os.environ.get("AZURE_OPENAI_TEMPERATURE", 0)
 AZURE_OPENAI_TOP_P = os.environ.get("AZURE_OPENAI_TOP_P", 1.0)
 AZURE_OPENAI_MAX_TOKENS = os.environ.get("AZURE_OPENAI_MAX_TOKENS", 1000)
 AZURE_OPENAI_STOP_SEQUENCE = os.environ.get("AZURE_OPENAI_STOP_SEQUENCE")
-AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information.")
+AZURE_OPENAI_SYSTEM_MESSAGE = os.environ.get("AZURE_OPENAI_SYSTEM_MESSAGE", "You are an AI assistant that helps people find information. You have access to a repository of information regarding ploice bail, when answering a query it's very important that you clearly quote exactly where you got your information from and reason how you came to your answer")
 AZURE_OPENAI_PREVIEW_API_VERSION = os.environ.get("AZURE_OPENAI_PREVIEW_API_VERSION", "2023-06-01-preview")
 AZURE_OPENAI_STREAM = os.environ.get("AZURE_OPENAI_STREAM", "true")
 AZURE_OPENAI_MODEL_NAME = os.environ.get("AZURE_OPENAI_MODEL_NAME", "gpt-35-turbo") # Name of the model, e.g. 'gpt-35-turbo' or 'gpt-4'
@@ -59,7 +59,9 @@ def is_chat_model():
 
 def should_use_data():
     if AZURE_SEARCH_SERVICE and AZURE_SEARCH_INDEX and AZURE_SEARCH_KEY:
+        print("using data")
         return True
+    
     return False
 
 def prepare_body_headers_with_data(request):
@@ -70,7 +72,11 @@ def prepare_body_headers_with_data(request):
         "temperature": float(AZURE_OPENAI_TEMPERATURE),
         "max_tokens": int(AZURE_OPENAI_MAX_TOKENS),
         "top_p": float(AZURE_OPENAI_TOP_P),
-        "stop": AZURE_OPENAI_STOP_SEQUENCE.split("|") if AZURE_OPENAI_STOP_SEQUENCE else None,
+        "stop": (
+            AZURE_OPENAI_STOP_SEQUENCE.split("|")
+            if AZURE_OPENAI_STOP_SEQUENCE
+            else None
+        ),
         "stream": SHOULD_STREAM,
         "dataSources": [
             {
@@ -78,21 +84,48 @@ def prepare_body_headers_with_data(request):
                 "parameters": {
                     "endpoint": f"https://{AZURE_SEARCH_SERVICE}.search.windows.net",
                     "key": AZURE_SEARCH_KEY,
-                    "indexName": AZURE_SEARCH_INDEX,
+                    "indexName": "police-bail-poc",
                     "fieldsMapping": {
-                        "contentFields": AZURE_SEARCH_CONTENT_COLUMNS.split("|") if AZURE_SEARCH_CONTENT_COLUMNS else [],
-                        "titleField": AZURE_SEARCH_TITLE_COLUMN if AZURE_SEARCH_TITLE_COLUMN else None,
-                        "urlField": AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None,
-                        "filepathField": AZURE_SEARCH_FILENAME_COLUMN if AZURE_SEARCH_FILENAME_COLUMN else None
+                        "contentFields": (
+                            AZURE_SEARCH_CONTENT_COLUMNS.split("|")
+                            if AZURE_SEARCH_CONTENT_COLUMNS
+                            else []
+                        ),
+                        "titleField": (
+                            AZURE_SEARCH_TITLE_COLUMN
+                            if AZURE_SEARCH_TITLE_COLUMN
+                            else None
+                        ),
+                        "urlField": (
+                            AZURE_SEARCH_URL_COLUMN if AZURE_SEARCH_URL_COLUMN else None
+                        ),
+                        "filepathField": (
+                            AZURE_SEARCH_FILENAME_COLUMN
+                            if AZURE_SEARCH_FILENAME_COLUMN
+                            else None
+                        ),
                     },
-                    "inScope": True if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true" else False,
+                    "inScope": (
+                        True
+                        if AZURE_SEARCH_ENABLE_IN_DOMAIN.lower() == "true"
+                        else False
+                    ),
                     "topNDocuments": AZURE_SEARCH_TOP_K,
-                    "queryType": "semantic" if AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" else "simple",
-                    "semanticConfiguration": AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG if AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true" and AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG else "",
-                    "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE
-                }
+                    "queryType": (
+                        "semantic"
+                        if AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true"
+                        else "simple"
+                    ),
+                    "semanticConfiguration": (
+                        AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG
+                        if AZURE_SEARCH_USE_SEMANTIC_SEARCH.lower() == "true"
+                        and AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG
+                        else ""
+                    ),
+                    "roleInformation": AZURE_OPENAI_SYSTEM_MESSAGE,
+                },
             }
-        ]
+        ],
     }
 
     chatgpt_url = f"https://{AZURE_OPENAI_RESOURCE}.openai.azure.com/openai/deployments/{AZURE_OPENAI_MODEL}"
